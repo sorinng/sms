@@ -8,45 +8,72 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-body { background:#f4f4f4; font-family: "Pretendard","Malgun Gothic",sans-serif; }
-.card { background:white; padding:24px; border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
-.label { font-size:15px; font-weight:600; color:#333; margin-bottom:6px; }
-.input-box { width:70%; margin:auto; border:1px solid #ddd; border-radius:10px; padding:12px; font-size:15px; display:block; }
-.big-btn { width:100%; background:#4a7afe; color:white; padding:14px; font-size:18px; border-radius:12px; font-weight:700; }
+body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; font-size:20px; }
+.card { background:white; padding:30px; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.1); text-align:center; }
+
+.label { font-size:20px; font-weight:700; color:#333; margin-bottom:8px; text-align:center; }
+
+.input-box {
+  width:50%;
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:15px;
+  font-size:20px;
+  margin:auto;
+  display:block;
+}
+
+.big-btn {
+  width:100%;
+  background:#4a7afe;
+  color:white;
+  padding:18px;
+  font-size:24px;
+  border-radius:14px;
+  font-weight:700;
+}
+
 .big-btn:hover { background:#2455ea; }
-.qr-title { font-size:18px; font-weight:700; margin-bottom:12px; text-align:center; }
+
+.qr-title { font-size:22px; font-weight:800; margin-bottom:14px; text-align:center; }
 .hidden-area { display:none; }
+
+#sendButtons button {
+  font-size:24px;
+  padding:20px;
+  border-radius:18px;
+}
 </style>
 </head>
 
-<body class="p-5">
+<body class="p-5 flex justify-center items-center">
 
-<div class="max-w-3xl mx-auto card">
+<div class="max-w-3xl w-full mx-auto card">
 
-<h1 class="text-3xl font-extrabold mb-8 text-center">📱 문자 보내기 📱</h1>
+<h1 class="text-4xl font-extrabold mb-10 text-center">📱 문자 보내기 📱</h1>
 
 <div id="inputArea">
 
-<div class="mb-6 text-center">
-  <div class="label text-left" style="width:70%; margin:auto;">핸드폰 번호 (<span id="phoneCount">0</span>개)</div>
-  <textarea id="phoneInput" class="input-box h-40" placeholder="01012345678&#10;01098765432"></textarea>
+<div class="mb-10">
+  <div class="label">핸드폰 번호 (<span id="phoneCount">0</span>개)</div>
+  <textarea id="phoneInput" class="input-box h-48" placeholder="01012345678&#10;01098765432"></textarea>
 </div>
 
-<div class="mb-8 text-center">
-  <div class="label text-left" style="width:70%; margin:auto;">문자내용 (한 개의 메시지로 처리)</div>
-  <textarea id="msgInput" class="input-box h-32" placeholder="안녕하세요. 문자 발송 안내드립니다."></textarea>
+<div class="mb-10">
+  <div class="label">문자내용 (한 개의 메시지)</div>
+  <textarea id="msgInput" class="input-box h-40" placeholder="안녕하세요. 문자 발송 안내드립니다."></textarea>
 </div>
 
-<button id="makeQR" class="big-btn mb-8">QR 코드 생성 (번호/문자 포함)</button>
+<button id="makeQR" class="big-btn mb-10">QR 코드 생성 (번호/문자 포함)</button>
 
 <div id="qrArea" class="text-center"></div>
 
 </div>
 
-<div id="sendButtons" class="space-y-4 mt-6"></div>
+<div id="sendButtons" class="space-y-6 mt-10"></div>
 
-<div class="mt-10 text-sm text-gray-600 leading-relaxed">
-  스마트폰에서 QR을 스캔하면 번호·문자가 자동 입력되고
+<div class="mt-12 text-gray-700 text-lg leading-relaxed">
+  스마트폰에서 QR을 스캔하면 번호·문자가 자동 입력되고<br>
   사람별 보내기 버튼이 자동 생성됩니다.
 </div>
 
@@ -79,8 +106,8 @@ document.getElementById("makeQR").onclick = () => {
 
   new QRCode(document.getElementById("qrcode"), {
     text: finalURL,
-    width: 230,
-    height: 230
+    width: 260,
+    height: 260
   });
 };
 
@@ -98,7 +125,7 @@ function createSendButtons(phones,msgs){
 
     const btn=document.createElement("button");
     btn.className="big-btn";
-    btn.innerHTML=`[${i+1}] ${p} → 보내기`;
+    btn.innerHTML=`📨 [${i+1}] ${p} → 문자 보내기`;
 
     btn.onclick=()=>{
       const smsURL=`sms:${p}?body=${encodeURIComponent(msg)}`;
@@ -128,4 +155,3 @@ window.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
-
