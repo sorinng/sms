@@ -8,182 +8,126 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-body {
-  font-family: "Pretendard", "Malgun Gothic", sans-serif;
-}
+body { background:#f6f6f6; font-family: "Pretendard","Malgun Gothic",sans-serif; }
+.card { background:white; padding:24px; border-radius:18px; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+.label { font-size:15px; font-weight:600; color:#333; margin-bottom:6px; }
+.input-box { width:100%; border:1px solid #ddd; border-radius:10px; padding:12px; font-size:15px; }
+.big-btn { width:100%; background:#4a7afe; color:white; padding:14px; font-size:18px; border-radius:12px; font-weight:700; }
+.big-btn:hover { background:#2455ea; }
+.qr-title { font-size:18px; font-weight:700; margin-bottom:12px; text-align:center; }
+.hidden-area { display:none; }
 </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen p-4">
+<body class="p-5">
 
-<div class="max-w-3xl mx-auto bg-white shadow-xl rounded-xl p-6">
+<div class="max-w-3xl mx-auto card">
 
-  <h1 class="text-3xl font-extrabold text-center mb-6">📱 가장 쉬운 문자 보내기1</h1>
+<h1 class="text-3xl font-extrabold mb-8 text-center">📱 가장 쉬운 문자 보내기</h1>
 
-  <!-- PC 입력 영역 -->
-  <div id="inputArea">
+<div id="inputArea">
 
-    <div class="grid grid-cols-2 gap-4 mb-6">
+<div class="mb-6">
+  <div class="label">핸드폰 번호 (<span id="phoneCount">0</span>개)</div>
+  <textarea id="phoneInput" class="input-box h-40" placeholder="01012345678&#10;01098765432"></textarea>
+</div>
 
-      <div>
-        <h2 class="font-semibold mb-1">핸드폰 번호 (<span id="phoneCount">0</span>개)</h2>
-        <textarea id="phoneInput"
-          class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          placeholder="01011112222&#10;01033334444"></textarea>
-      </div>
+<div class="mb-8">
+  <div class="label">문자 내용 (첫 번째 메시지를 전체에게 반복 적용)</div>
+  <textarea id="msgInput" class="input-box h-32" placeholder="안녕하세요. 문자 발송 안내드립니다."></textarea>
+</div>
 
-      <div>
-        <h2 class="font-semibold mb-1">문자내용 (<span id="msgCount">0</span>개)</h2>
-        <textarea id="msgInput"
-          class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          placeholder="안녕하세요&#10;메시지입니다"></textarea>
-      </div>
+<button id="makeQR" class="big-btn mb-8">QR 코드 생성 (번호/문자 포함)</button>
 
-    </div>
-
-    <button id="makeQR"
-      class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-lg text-lg font-semibold mb-6">
-      QR 코드 생성 (번호/문자 포함)
-    </button>
-
-    <div id="qrArea" class="my-6 text-center"></div>
-  </div>
-
-  <!-- 모바일 자동 버튼 영역 -->
-  <div id="sendButtons" class="space-y-3"></div>
-
-  <div class="mt-8 p-4 bg-gray-100 rounded-xl text-sm leading-relaxed">
-    📌 스마트폰에서는 <b>QR로 접속</b>하면 번호·문자가 자동 입력되고  
-    사람별 보내기 버튼이 자동 생성됩니다.
-  </div>
+<div id="qrArea" class="text-center"></div>
 
 </div>
 
+<div id="sendButtons" class="space-y-4 mt-6"></div>
+
+<div class="mt-10 text-sm text-gray-600 leading-relaxed">
+  스마트폰에서 QR로 접속하면 번호·문자가 자동 입력되고
+  사람별 보내기 버튼이 자동 생성됩니다.
+</div>
+
+</div>
 
 <script>
-// -----------------------------
-// 줄 개수
-// -----------------------------
-function countLines(text) {
-  return text.split("\n").filter(v => v.trim()).length;
-}
 
-function updateCounts() {
+function countLines(t){ return t.split("\n").filter(v=>v.trim()).length; }
+function updateCounts(){
   phoneCount.innerText = countLines(phoneInput.value);
-  msgCount.innerText   = countLines(msgInput.value);
 }
-
 phoneInput.addEventListener("input", updateCounts);
-msgInput.addEventListener("input", updateCounts);
+msgInput.addEventListener("input", ()=>{});
 
+document.getElementById("makeQR").onclick = () => {
+  const phones = phoneInput.value.split("\n").map(v=>v.trim()).filter(v=>v);
+  const msgRaw = msgInput.value.split("\n").map(v=>v.trim()).filter(v=>v);
 
-// -----------------------------
-// URL 파라미터 읽기
-// -----------------------------
-function getParam(name) {
+  if(phones.length===0 || msgRaw.length===0){
+    alert("번호와 문자를 입력하세요.");
+    return;
+  }
+
+  const firstMsg = msgRaw[0];
+  const msgs = phones.map(()=>firstMsg);
+
+  const pParam = encodeURIComponent(phones.join(","));
+  const mParam = encodeURIComponent(msgs.join("||"));
+
+  const finalURL = `https://sorinng.github.io/sms/?p=${pParam}&m=${mParam}`;
+
+  const qrDiv = document.getElementById("qrArea");
+  qrDiv.innerHTML = `<div class="qr-title">QR 코드로 접속하세요</div><div id="qrcode"></div>`;
+
+  new QRCode(document.getElementById("qrcode"), {
+    text: finalURL,
+    width: 230,
+    height: 230
+  });
+};
+
+function getParam(name){
   const url = new URL(window.location.href);
   return url.searchParams.get(name);
 }
 
-
-// -----------------------------
-// 버튼 생성 함수
-// -----------------------------
-function createSendButtons(phones, msgs) {
-
+function createSendButtons(phones,msgs){
   const area = document.getElementById("sendButtons");
-  area.innerHTML = "";
+  area.innerHTML="";
 
-  phones.forEach((p, i) => {
+  phones.forEach((p,i)=>{
     const msg = msgs[i];
 
-    const btn = document.createElement("button");
-    btn.className =
-      "w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg shadow text-lg font-semibold";
-    btn.innerHTML = `[${i+1}] ${p} → 보내기`;
+    const btn=document.createElement("button");
+    btn.className="big-btn";
+    btn.innerHTML=`[${i+1}] ${p} → 보내기`;
 
-    btn.onclick = () => {
-      const smsURL = `sms:${p}?body=${encodeURIComponent(msg)}`;
-      window.location.href = smsURL;
-      btn.style.display = "none";
+    btn.onclick=()=>{
+      const smsURL=`sms:${p}?body=${encodeURIComponent(msg)}`;
+      window.location.href=smsURL;
+      btn.style.display="none";
     };
 
     area.appendChild(btn);
   });
 }
 
+window.addEventListener("DOMContentLoaded",()=>{
+  const p=getParam("p");
+  const m=getParam("m");
 
-// -----------------------------
-// QR 생성 (번호·문자 포함 URL 생성)
-// -----------------------------
-document.getElementById("makeQR").onclick = () => {
+  if(!p||!m) return;
 
-  const phones = phoneInput.value.split("\n").map(v => v.trim()).filter(v=>v);
-  const msgs   = msgInput.value.split("\n").map(v => v.trim()).filter(v=>v);
+  document.getElementById("inputArea").classList.add("hidden-area");
 
-  if (phones.length === 0 || msgs.length === 0) {
-    alert("번호와 문자를 입력하세요.");
-    return;
-  }
+  const phones=decodeURIComponent(p).split(",");
+  const msgs=decodeURIComponent(m).split("||");
 
-  // 메시지 개수가 다르면 아주방처럼 처리
-  if (phones.length !== msgs.length) {
-    const isSame = confirm(
-      "동일 메시지를 반복해서 보내시려면 '확인'.\n번호별 개별 문자를 보내려면 '취소'."
-    );
-
-    if (isSame) {
-      const msg = msgs[0];
-      msgs.length = 0;
-      phones.forEach(() => msgs.push(msg));
-    } else {
-      if (msgs.length !== phones.length) {
-        alert("개별 발송은 번호 수와 메시지 수가 같아야 합니다.");
-        return;
-      }
-    }
-  }
-
-  // URL 파라미터 인코딩
-  const pParam = encodeURIComponent(phones.join(","));
-  const mParam = encodeURIComponent(msgs.join("||"));
-
-  const finalURL = `https://sorinng.github.io/sms/?p=${pParam}&m=${mParam}`;
-
-  // QR 생성
-  const qrDiv = document.getElementById("qrArea");
-  qrDiv.innerHTML = `
-    <h3 class="text-lg font-semibold mb-3">스마트폰으로 QR을 스캔하세요</h3>
-    <div id="qrcode"></div>
-  `;
-
-  new QRCode(document.getElementById("qrcode"), {
-    text: finalURL,
-    width: 220,
-    height: 220
-  });
-
-};
-
-
-// -----------------------------
-// 모바일 접속 시 자동 버튼 생성
-// -----------------------------
-window.addEventListener("DOMContentLoaded", () => {
-
-  const p = getParam("p");
-  const m = getParam("m");
-
-  if (!p || !m) return;
-
-  // PC 입력 영역 숨기기
-  document.getElementById("inputArea").style.display = "none";
-
-  const phones = decodeURIComponent(p).split(",");
-  const msgs   = decodeURIComponent(m).split("||");
-
-  createSendButtons(phones, msgs);
+  createSendButtons(phones,msgs);
 });
+
 </script>
 
 </body>
