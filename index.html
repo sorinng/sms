@@ -2,150 +2,153 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>문자 발송 페이지</title>
+<title>가장 쉬운 문자 보내기</title>
 
-<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
-
-<!-- Handsontable -->
-<link href="https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/handsontable@12.4.0/dist/handsontable.full.min.js"></script>
-
-<!-- QRCode JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body {
+  font-family: "Pretendard", "Malgun Gothic", sans-serif;
+}
+</style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen p-4">
 
-<div class="max-w-3xl mx-auto mt-8 bg-white shadow-xl rounded-xl p-8">
+<div class="max-w-3xl mx-auto bg-white shadow-xl rounded-xl p-6">
 
-  <!-- 제목 + QR 생성 버튼 -->
-  <div class="flex justify-between items-center mb-8">
-    <h1 class="text-3xl font-bold">📱 문자 발송 관리</h1>
+  <!-- HEADER -->
+  <h1 class="text-3xl font-extrabold text-center mb-6">📱 가장 쉬운 문자 보내기</h1>
 
-    <button id="makeQR"
-      class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg shadow font-semibold">
-      QR 코드 생성
-    </button>
+  <!-- 번호/문자 개수 표시 -->
+  <div class="grid grid-cols-2 gap-4 mb-6">
+
+    <div>
+      <h2 class="font-semibold">핸드폰 번호 (<span id="phoneCount">0</span>개)</h2>
+      <textarea id="phoneInput" class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+        placeholder="01011112222&#10;01033334444"></textarea>
+    </div>
+
+    <div>
+      <h2 class="font-semibold">문자내용 (<span id="msgCount">0</span>개)</h2>
+      <textarea id="msgInput" class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+        placeholder="안녕하세요&#10;메시지입니다"></textarea>
+    </div>
+
   </div>
 
-  <!-- 연락처 입력 -->
-  <h2 class="text-xl font-semibold mb-2">연락처 입력</h2>
-  <p class="text-gray-500 mb-3">최대 50명 입력 가능 (15명까지만 화면에 표시)</p>
+  <!-- 버튼 생성 -->
+  <button id="makeBtn"
+    class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-lg text-lg font-semibold">
+    문자 보내기 버튼 만들기 (서버 저장 없음)
+  </button>
 
-  <div id="hot" class="mb-8"></div>
+  <!-- QR 위치 -->
+  <div id="qrArea" class="my-6 text-center"></div>
 
-  <!-- 문자 내용 입력 -->
-  <h2 class="text-xl font-semibold mb-2">문자 내용</h2>
-  <textarea id="msgText" class="w-full h-32 p-3 border rounded-lg mb-8
-             focus:outline-none focus:ring-2 focus:ring-blue-600"
-    placeholder="예: 안녕하세요. 일정 안내드립니다."></textarea>
+  <!-- 버튼 리스트 -->
+  <div id="sendButtons" class="space-y-3"></div>
 
-  <!-- 사람별 문자 발송 버튼 -->
-  <h2 class="text-xl font-semibold mb-4">문자 보내기</h2>
-  <div id="buttonArea" class="space-y-3"></div>
-
-  <!-- QR 출력 위치 -->
-  <div id="qrArea" class="text-center mt-8"></div>
+  <!-- 안내 -->
+  <div class="mt-8 p-4 bg-gray-100 rounded-xl text-sm leading-relaxed">
+    <p>📌 스마트폰에서 <b>보내기</b> 버튼을 클릭하면 문자보내기 화면으로 전환됩니다.<br>
+    PC에서는 문자앱이 없기 때문에 작동하지 않습니다.</p>
+  </div>
 
 </div>
 
-
 <script>
-  // -----------------------------
-  // 1. 50행 빈 데이터 만들기
-  // -----------------------------
-  const emptyData = Array.from({ length: 50 }, () => ["", ""]);
+// -----------------------------
+// 줄 개수 계산
+// -----------------------------
+function countLines(text) {
+  return text.split("\n").filter(v => v.trim() !== "").length;
+}
 
+function updateCounts() {
+  document.getElementById("phoneCount").innerText = countLines(phoneInput.value);
+  document.getElementById("msgCount").innerText = countLines(msgInput.value);
+}
 
-  // -----------------------------
-  // 2. Handsontable 초기화 (15행 높이 지정)
-  // -----------------------------
-  const container = document.getElementById("hot");
+document.getElementById("phoneInput").addEventListener("input", updateCounts);
+document.getElementById("msgInput").addEventListener("input", updateCounts);
 
-  const hot = new Handsontable(container, {
-    data: emptyData,
-    colHeaders: ["이름", "전화번호"],
-    rowHeaders: true,
-    contextMenu: true,
-    width: "100%",
-    height: 400,    // → 약 15행 높이
-    licenseKey: "non-commercial-and-evaluation"
-  });
+// -----------------------------
+// 버튼 생성
+// -----------------------------
+document.getElementById("makeBtn").onclick = () => {
+  
+  const phones = phoneInput.value.split("\n").map(v => v.trim()).filter(v=>v);
+  const msgs   = msgInput.value.split("\n").map(v => v.trim()).filter(v=>v);
 
-
-  // -----------------------------
-  // 3. 사람별 문자 보내기 버튼 렌더링
-  // -----------------------------
-  function renderButtons() {
-    const area = document.getElementById("buttonArea");
-    area.innerHTML = "";
-
-    const rows = hot.getData();
-    const message = document.getElementById("msgText").value.trim();
-
-    rows.forEach(row => {
-      const name = row[0];
-      const phone = row[1];
-
-      if (!name || !phone) return;
-
-      // 이미 문자 보냈으면 숨김
-      if (localStorage.getItem("sent_" + name)) return;
-
-      const btn = document.createElement("button");
-      btn.className =
-        "w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg shadow text-lg font-semibold";
-      btn.innerText = `${name}에게 문자 보내기`;
-
-      btn.onclick = () => {
-        if (!message) {
-          alert("문자 내용을 입력하세요!");
-          return;
-        }
-
-        const smsUrl = `sms:${phone}?body=${encodeURIComponent(message)}`;
-
-        // 문자 보낸 사람 저장
-        localStorage.setItem("sent_" + name, "true");
-
-        // 문자 앱 실행
-        window.location.href = smsUrl;
-
-        // 버튼 다시 렌더링
-        setTimeout(() => renderButtons(), 500);
-      };
-
-      area.appendChild(btn);
-    });
+  if (phones.length === 0 || msgs.length === 0) {
+    alert("번호와 문자를 입력하세요.");
+    return;
   }
 
-  // 페이지 로드시 자동 생성
-  setTimeout(renderButtons, 300);
+  // 메시지 수와 번호 수가 다르면 아주방처럼 팝업
+  if (msgs.length !== phones.length) {
+    const answer = confirm(
+      "동일한 메시지를 여러 번호에 보낼까요?\n\n확인: 동일 메시지 반복\n취소: 번호별 다른 메시지 매칭"
+    );
 
-  document.getElementById("msgText").addEventListener("input", renderButtons);
+    if (answer) {
+      // 동일 메시지로 단체 발송
+      while (msgs.length < phones.length) msgs.push(msgs[0]);
+    } else {
+      // 개별 매칭인데 길이가 다르면 불가
+      if (msgs.length !== phones.length) {
+        alert("번호 수와 메시지 수가 일치해야 개별 발송이 가능합니다.");
+        return;
+      }
+    }
+  }
 
+  // 보내기 버튼 만들기
+  const area = document.getElementById("sendButtons");
+  area.innerHTML = "";
 
-  // -----------------------------
-  // 4. QR 코드 생성 기능
-  // -----------------------------
-  document.getElementById("makeQR").addEventListener("click", () => {
-    const qrArea = document.getElementById("qrArea");
-    qrArea.innerHTML = `
-      <h3 class="text-xl font-semibold mb-3">이 페이지로 접속하는 QR 코드</h3>
-      <div id="qrcode" class="flex justify-center"></div>
-    `;
+  phones.forEach((p, i) => {
+    const msg = msgs[i];
 
-    // 현재 페이지 URL 자동 불러오기
-    const pageURL = window.location.href;
+    const btn = document.createElement("button");
+    btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg shadow text-lg font-semibold";
+    btn.innerHTML = `[${i+1}] ${p} &nbsp; ➜ 보내기`;
 
-    new QRCode(document.getElementById("qrcode"), {
-      text: pageURL,
-      width: 220,
-      height: 220
-    });
+    btn.onclick = () => {
+      const smsURL = `sms:${p}?body=${encodeURIComponent(msg)}`;
+      window.location.href = smsURL;
+
+      // 클릭 후 아주방처럼 버튼 삭제
+      btn.style.display = "none";
+    };
+
+    area.appendChild(btn);
   });
 
+  // QR 생성 (현재 페이지 URL)
+  createQR();
+
+};
+
+// -----------------------------
+// QR 생성
+// -----------------------------
+function createQR() {
+  const qrDiv = document.getElementById("qrArea");
+  qrDiv.innerHTML = "";
+
+  const q = document.createElement("div");
+  q.id = "qrcode";
+  qrDiv.appendChild(q);
+
+  new QRCode(q, {
+    text: window.location.href,
+    width: 200,
+    height: 200
+  });
+}
 </script>
 
 </body>
