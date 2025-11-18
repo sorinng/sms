@@ -23,10 +23,10 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
   display:block;
 }
 
-/* 📌 여기 색상 변경 */
+/* 📌 버튼 색상 */
 .big-btn {
   width:50%;
-  background:#C9B6E4;        /* 파스텔 보라 */
+  background:#C9B6E4;
   color:white;
   padding:20px;
   font-size:24px;
@@ -36,9 +36,7 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
   display:block;
 }
 
-.big-btn:hover {
-  background:#B39CD0;         /* 약간 더 진한 보라 */
-}
+.big-btn:hover { background:#B39CD0; }
 
 .qr-title { font-size:22px; font-weight:800; margin-bottom:14px; text-align:center; }
 .hidden-area { display:none; }
@@ -74,7 +72,7 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
 </div>
 
 <div class="mb-16">
-  <button id="makeQR" class="big-btn">QR 코드 생성 </button>
+  <button id="makeQR" class="big-btn">QR 코드 생성</button>
 </div>
 
 <div id="qrArea" class="text-center mt-10"></div>
@@ -97,11 +95,19 @@ function updateCounts(){ phoneCount.innerText = countLines(phoneInput.value); }
 phoneInput.addEventListener("input", updateCounts);
 
 document.getElementById("makeQR").onclick = () => {
-  const phones = phoneInput.value.split("\n").map(v=>v.trim()).filter(v=>v);
-  const msg = msgInput.value.trim();
 
-  if(phones.length===0 || msg.length===0){
-    alert("번호와 문자를 입력하세요.");
+  const phones = phoneInput.value.split("\n").map(v=>v.trim()).filter(v=>v);
+  let msg = msgInput.value;
+
+  // 📌 문자내용이 한 줄일 때도 공백으로 인식되지 않도록 보정
+  msg = msg.replace(/\r?\n/g, " ").trim();
+  if(msg.length === 0){
+    alert("문자 내용을 입력하세요.");
+    return;
+  }
+
+  if(phones.length === 0){
+    alert("번호를 입력하세요.");
     return;
   }
 
@@ -112,8 +118,14 @@ document.getElementById("makeQR").onclick = () => {
 
   const finalURL = `https://sorinng.github.io/sms/?p=${pParam}&m=${mParam}`;
 
+  // 📌 QR 코드 중앙정렬 박스 추가
   const qrDiv = document.getElementById("qrArea");
-  qrDiv.innerHTML = `<div class="qr-title">QR 코드로 접속하세요</div><div id="qrcode"></div>`;
+  qrDiv.innerHTML = `
+    <div class="qr-title">QR 코드로 접속하세요</div>
+    <div class="flex justify-center">
+      <div id="qrcode"></div>
+    </div>
+  `;
 
   new QRCode(document.getElementById("qrcode"), {
     text: finalURL,
@@ -133,7 +145,6 @@ function createSendButtons(phones,msgs){
 
   phones.forEach((p,i)=>{
     const msg = msgs[i];
-
     const btn=document.createElement("button");
     btn.className="big-btn";
     btn.style.width = "100%";
@@ -167,4 +178,3 @@ window.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
-
