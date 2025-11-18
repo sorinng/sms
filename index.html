@@ -23,9 +23,10 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
   display:block;
 }
 
+/* 📌 여기 색상 변경 */
 .big-btn {
   width:50%;
-  background:#4a7afe;
+  background:#C9B6E4;        /* 파스텔 보라 */
   color:white;
   padding:20px;
   font-size:24px;
@@ -35,13 +36,16 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
   display:block;
 }
 
-.big-btn:hover { background:#2455ea; }
+.big-btn:hover {
+  background:#B39CD0;         /* 약간 더 진한 보라 */
+}
 
 .qr-title { font-size:22px; font-weight:800; margin-bottom:14px; text-align:center; }
 .hidden-area { display:none; }
 
 #qrcode { margin:auto; }
 
+/* 모바일 전송 버튼 */
 #sendButtons button {
   font-size:40px;
   padding:40px;
@@ -59,21 +63,18 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
 
 <div id="inputArea">
 
-<!-- 핸드폰 번호 입력 -->
 <div class="mb-16">
   <div class="label">핸드폰 번호 (<span id="phoneCount">0</span>개)</div>
   <textarea id="phoneInput" class="input-box h-48" placeholder="01012345678&#10;01098765432"></textarea>
 </div>
 
-<!-- 문자내용 입력 — 위쪽 간격 크게 추가 -->
 <div class="mt-16 mb-16">
   <div class="label">문자내용</div>
   <textarea id="msgInput" class="input-box h-40" placeholder="안녕하세요. 문자 발송 안내드립니다."></textarea>
 </div>
 
-<!-- QR코드 생성 버튼 — 위쪽 간격 크게 추가 -->
 <div class="mt-16 mb-16">
-  <button id="makeQR" class="big-btn">QR 코드 생성 (번호/문자 포함)</button>
+  <button id="makeQR" class="big-btn">QR 코드 생성 </button>
 </div>
 
 <div id="qrArea" class="text-center mt-10"></div>
