@@ -35,7 +35,6 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
   margin:auto;
   display:block;
 }
-
 .big-btn:hover { background:#B39CD0; }
 
 .qr-title { font-size:22px; font-weight:800; margin-bottom:14px; text-align:center; }
@@ -90,27 +89,37 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
 
 <script>
 
+// 핸드폰 개수 카운트
 function countLines(t){ return t.split("\n").filter(v=>v.trim()).length; }
 function updateCounts(){ phoneCount.innerText = countLines(phoneInput.value); }
 phoneInput.addEventListener("input", updateCounts);
 
+
+// QR 코드 생성
 document.getElementById("makeQR").onclick = () => {
 
-  const phones = phoneInput.value.split("\n").map(v=>v.trim()).filter(v=>v);
+  const phones = phoneInput.value
+    .split("\n")
+    .map(v=>v.trim())
+    .filter(v=>v);
+
   let msg = msgInput.value;
 
-  // 📌 문자내용이 한 줄일 때도 공백으로 인식되지 않도록 보정
-  msg = msg.replace(/\r?\n/g, " ").trim();
-  if(msg.length === 0){
+  // 📌 메시지 비어있을 때 방지
+  if(!msg || msg.trim().length === 0){
     alert("문자 내용을 입력하세요.");
     return;
   }
+
+  // 📌 여러 줄 메시지를 QR에서 안전하게 전송하도록 변환
+  msg = msg.replace(/\r?\n/g, "<br>");
 
   if(phones.length === 0){
     alert("번호를 입력하세요.");
     return;
   }
 
+  // 번호 개수만큼 동일한 메시지 복제
   const msgs = phones.map(()=>msg);
 
   const pParam = encodeURIComponent(phones.join(","));
@@ -118,7 +127,7 @@ document.getElementById("makeQR").onclick = () => {
 
   const finalURL = `https://sorinng.github.io/sms/?p=${pParam}&m=${mParam}`;
 
-  // 📌 QR 코드 중앙정렬 박스 추가
+  // 📌 QR 중앙정렬
   const qrDiv = document.getElementById("qrArea");
   qrDiv.innerHTML = `
     <div class="qr-title">QR 코드로 접속하세요</div>
@@ -134,17 +143,22 @@ document.getElementById("makeQR").onclick = () => {
   });
 };
 
+
+// URL 파라미터 읽기
 function getParam(name){
   const url = new URL(window.location.href);
   return url.searchParams.get(name);
 }
 
+
+// 모바일에서 실제 문자 보내기 버튼 생성
 function createSendButtons(phones,msgs){
   const area = document.getElementById("sendButtons");
   area.innerHTML="";
 
   phones.forEach((p,i)=>{
-    const msg = msgs[i];
+    const msg = msgs[i].replace(/<br>/g, "\n");  // ← 줄바꿈 복원
+
     const btn=document.createElement("button");
     btn.className="big-btn";
     btn.style.width = "100%";
@@ -160,12 +174,15 @@ function createSendButtons(phones,msgs){
   });
 }
 
+
+// QR을 통해 접속한 경우 동작
 window.addEventListener("DOMContentLoaded",()=>{
   const p=getParam("p");
   const m=getParam("m");
 
   if(!p||!m) return;
 
+  // 입력영역 숨김
   document.getElementById("inputArea").classList.add("hidden-area");
 
   const phones=decodeURIComponent(p).split(",");
