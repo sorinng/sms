@@ -4,7 +4,10 @@
 <meta charset="UTF-8">
 <title>가장 쉬운 문자 보내기</title>
 
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- QRCode -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
@@ -16,23 +19,28 @@ body {
 
 <body class="bg-gray-100 min-h-screen p-4">
 
+<!-- 메인 컨테이너 -->
 <div class="max-w-3xl mx-auto bg-white shadow-xl rounded-xl p-6">
 
-  <!-- HEADER -->
+  <!-- 제목 -->
   <h1 class="text-3xl font-extrabold text-center mb-6">📱 가장 쉬운 문자 보내기</h1>
 
-  <!-- 번호/문자 개수 표시 -->
+  <!-- 번호/문자 입력 -->
   <div class="grid grid-cols-2 gap-4 mb-6">
 
+    <!-- 전화번호 입력 -->
     <div>
-      <h2 class="font-semibold">핸드폰 번호 (<span id="phoneCount">0</span>개)</h2>
-      <textarea id="phoneInput" class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+      <h2 class="font-semibold mb-1">핸드폰 번호 (<span id="phoneCount">0</span>개)</h2>
+      <textarea id="phoneInput"
+        class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
         placeholder="01011112222&#10;01033334444"></textarea>
     </div>
 
+    <!-- 메시지 입력 -->
     <div>
-      <h2 class="font-semibold">문자내용 (<span id="msgCount">0</span>개)</h2>
-      <textarea id="msgInput" class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+      <h2 class="font-semibold mb-1">문자내용 (<span id="msgCount">0</span>개)</h2>
+      <textarea id="msgInput"
+        class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
         placeholder="안녕하세요&#10;메시지입니다"></textarea>
     </div>
 
@@ -40,111 +48,119 @@ body {
 
   <!-- 버튼 생성 -->
   <button id="makeBtn"
-    class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-lg text-lg font-semibold">
+    class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-lg text-lg font-semibold mb-6">
     문자 보내기 버튼 만들기 (서버 저장 없음)
   </button>
 
-  <!-- QR 위치 -->
+  <!-- QR 나타나는 곳 -->
   <div id="qrArea" class="my-6 text-center"></div>
 
-  <!-- 버튼 리스트 -->
+  <!-- 보내기 버튼 리스트 -->
   <div id="sendButtons" class="space-y-3"></div>
 
   <!-- 안내 -->
   <div class="mt-8 p-4 bg-gray-100 rounded-xl text-sm leading-relaxed">
-    <p>📌 스마트폰에서 <b>보내기</b> 버튼을 클릭하면 문자보내기 화면으로 전환됩니다.<br>
-    PC에서는 문자앱이 없기 때문에 작동하지 않습니다.</p>
+    📌 스마트폰에서 <b>보내기</b> 버튼을 클릭하면 문자보내기 화면으로 전환됩니다.  
+    <br>PC에서는 문자앱이 없기 때문에 작동하지 않습니다.
   </div>
 
 </div>
 
 <script>
 // -----------------------------
-// 줄 개수 계산
+// 줄 개수 카운트
 // -----------------------------
 function countLines(text) {
   return text.split("\n").filter(v => v.trim() !== "").length;
 }
 
 function updateCounts() {
-  document.getElementById("phoneCount").innerText = countLines(phoneInput.value);
-  document.getElementById("msgCount").innerText = countLines(msgInput.value);
+  phoneCount.innerText = countLines(phoneInput.value);
+  msgCount.innerText = countLines(msgInput.value);
 }
 
-document.getElementById("phoneInput").addEventListener("input", updateCounts);
-document.getElementById("msgInput").addEventListener("input", updateCounts);
+phoneInput.addEventListener("input", updateCounts);
+msgInput.addEventListener("input", updateCounts);
+
 
 // -----------------------------
-// 버튼 생성
+// 문자 보내기 버튼 생성
 // -----------------------------
 document.getElementById("makeBtn").onclick = () => {
-  
-  const phones = phoneInput.value.split("\n").map(v => v.trim()).filter(v=>v);
-  const msgs   = msgInput.value.split("\n").map(v => v.trim()).filter(v=>v);
 
-  if (phones.length === 0 || msgs.length === 0) {
+  const phoneArr = phoneInput.value.split("\n").map(v => v.trim()).filter(v => v);
+  const msgArr   = msgInput.value.split("\n").map(v => v.trim()).filter(v => v);
+
+  if (phoneArr.length === 0 || msgArr.length === 0) {
     alert("번호와 문자를 입력하세요.");
     return;
   }
 
-  // 메시지 수와 번호 수가 다르면 아주방처럼 팝업
-  if (msgs.length !== phones.length) {
-    const answer = confirm(
-      "동일한 메시지를 여러 번호에 보낼까요?\n\n확인: 동일 메시지 반복\n취소: 번호별 다른 메시지 매칭"
+  // 메시지 개수 불일치 → 아주방처럼 팝업
+  if (phoneArr.length !== msgArr.length) {
+
+    const isSame = confirm(
+      "동일한 메시지를 반복해서 보내시려면 '확인'을 선택하세요.\n" +
+      "개별적으로 보내려면 '취소'를 선택하세요."
     );
 
-    if (answer) {
-      // 동일 메시지로 단체 발송
-      while (msgs.length < phones.length) msgs.push(msgs[0]);
+    if (isSame) {
+      // 동일 메시지 반복
+      const msg = msgArr[0];
+      msgArr.length = 0;
+      phoneArr.forEach(() => msgArr.push(msg));
+
     } else {
-      // 개별 매칭인데 길이가 다르면 불가
-      if (msgs.length !== phones.length) {
-        alert("번호 수와 메시지 수가 일치해야 개별 발송이 가능합니다.");
+      // 개별매칭인데 개수가 다르면 오류
+      if (msgArr.length !== phoneArr.length) {
+        alert("개별 발송은 번호 수와 메시지 수가 동일해야 합니다.");
         return;
       }
     }
   }
 
-  // 보내기 버튼 만들기
+  // 버튼 리스트 생성
   const area = document.getElementById("sendButtons");
   area.innerHTML = "";
 
-  phones.forEach((p, i) => {
-    const msg = msgs[i];
+  phoneArr.forEach((p, i) => {
+    const msg = msgArr[i];
 
     const btn = document.createElement("button");
-    btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg shadow text-lg font-semibold";
-    btn.innerHTML = `[${i+1}] ${p} &nbsp; ➜ 보내기`;
+    btn.className =
+      "w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg shadow text-lg font-semibold";
+    btn.innerHTML = `[${i+1}] ${p} → 보내기`;
 
     btn.onclick = () => {
       const smsURL = `sms:${p}?body=${encodeURIComponent(msg)}`;
       window.location.href = smsURL;
-
-      // 클릭 후 아주방처럼 버튼 삭제
       btn.style.display = "none";
     };
 
     area.appendChild(btn);
   });
 
-  // QR 생성 (현재 페이지 URL)
-  createQR();
-
+  // QR 생성
+  generateQR();
 };
 
-// -----------------------------
-// QR 생성
-// -----------------------------
-function createQR() {
-  const qrDiv = document.getElementById("qrArea");
-  qrDiv.innerHTML = "";
 
-  const q = document.createElement("div");
-  q.id = "qrcode";
-  qrDiv.appendChild(q);
+// -----------------------------
+// QR 코드 생성 (고정 URL만 사용)
+// -----------------------------
+function generateQR() {
 
-  new QRCode(q, {
-    text: window.location.href,
+  // GitHub Pages 고정 URL
+  const fixedURL = "https://sorinng.github.io/sms/";
+
+  const qrArea = document.getElementById("qrArea");
+  qrArea.innerHTML = `
+    <h3 class="text-lg font-semibold mb-3">QR 코드로 접속하세요</h3>
+    <div id="qrcode" class="flex justify-center"></div>
+  `;
+
+  new QRCode(document.getElementById("qrcode"), {
+    text: fixedURL,   //  ← 반드시 고정 URL만 사용 (핵심 포인트!)
     width: 200,
     height: 200
   });
