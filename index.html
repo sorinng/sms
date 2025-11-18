@@ -11,13 +11,13 @@
 body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; font-size:20px; }
 .card { background:white; padding:30px; border-radius:20px; box-shadow:0 4px 20px rgba(0,0,0,0.1); text-align:center; }
 
-.label { font-size:20px; font-weight:700; color:#333; margin-bottom:8px; text-align:center; }
+.label { font-size:26px; font-weight:700; color:#333; margin-bottom:10px; text-align:center; }
 
 .input-box {
   width:50%;
   border:1px solid #ddd;
   border-radius:12px;
-  padding:15px;
+  padding:18px;
   font-size:20px;
   margin:auto;
   display:block;
@@ -27,7 +27,7 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
   width:50%;
   background:#4a7afe;
   color:white;
-  padding:18px;
+  padding:20px;
   font-size:24px;
   border-radius:14px;
   font-weight:700;
@@ -40,7 +40,9 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
 .qr-title { font-size:22px; font-weight:800; margin-bottom:14px; text-align:center; }
 .hidden-area { display:none; }
 
-/* 📌 핸드폰에서 생성되는 버튼 5배 크게 */
+#qrcode { margin:auto; }
+
+/* 모바일 버튼 5배 확대 */
 #sendButtons button {
   font-size:40px;
   padding:40px;
@@ -58,23 +60,30 @@ body { background:#f4f4f4; font-family:"Pretendard","Malgun Gothic",sans-serif; 
 
 <div id="inputArea">
 
-<div class="mb-10">
+<!-- 핸드폰 번호 입력 -->
+<div class="mb-14">
   <div class="label">핸드폰 번호 (<span id="phoneCount">0</span>개)</div>
   <textarea id="phoneInput" class="input-box h-48" placeholder="01012345678&#10;01098765432"></textarea>
 </div>
 
-<div class="mb-10">
-  <div class="label">문자내용 (한 개의 메시지)</div>
+<!-- 문자내용 입력 -->
+<div class="mb-14">
+  <div class="label">문자내용</div>
   <textarea id="msgInput" class="input-box h-40" placeholder="안녕하세요. 문자 발송 안내드립니다."></textarea>
 </div>
 
-<button id="makeQR" class="big-btn mb-10">QR 코드 생성 (번호/문자 포함)</button>
+<!-- QR코드 생성 버튼 -->
+<div class="mb-14">
+  <button id="makeQR" class="big-btn">QR 코드 생성 (번호/문자 포함)</button>
+</div>
 
-<div id="qrArea" class="text-center"></div>
+<!-- QR코드 출력 영역 -->
+<div id="qrArea" class="text-center mt-6"></div>
 
 </div>
 
-<div id="sendButtons" class="space-y-10 mt-10"></div>
+<!-- 핸드폰에서 접속 시 버튼 표시 -->
+<div id="sendButtons" class="space-y-10 mt-12"></div>
 
 <div class="mt-12 text-gray-700 text-lg leading-relaxed">
   스마트폰에서 QR을 스캔하면 번호·문자가 자동 입력되고<br>
