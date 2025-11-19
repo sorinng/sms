@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import qrcode
 from io import BytesIO
 import base64
@@ -47,125 +46,70 @@ if 'p' in query_params and 'm' in query_params:
     phones = phones_param.split(',')
     decoded_msg = decode_base64(msg_param)
     
-    # 원본 HTML을 그대로 사용 (JavaScript 포함)
-    html_code = f"""
-    <!DOCTYPE html>
-    <html lang="ko">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>문자 보내기</title>
+    # 전체 보내기 URL 생성
+    all_numbers = ",".join(phones)
+    encoded_msg = quote(decoded_msg)
+    
+    # iOS와 Android URL
+    ios_url = f"sms:/open?addresses={all_numbers}&body={encoded_msg}"
+    android_url = f"sms:{all_numbers}?body={encoded_msg}"
+    
+    # CSS와 HTML로 버튼 생성
+    st.markdown("""
     <style>
-    body {{
-      background:#f4f4f4;
-      font-family:"Malgun Gothic",sans-serif;
-      margin:0;
-      padding:20px;
-    }}
-    
-    .mobile-all-btn {{
-      background:#A8D5FE !important;
-      color:#003B73 !important;
-      font-weight:700 !important;
-      border-radius:15px !important;
-      padding:18px !important;
-      width:100% !important;
-      font-size:20px !important;
-      border:none;
-      cursor:pointer;
-      margin-bottom:20px !important;
-    }}
-    
-    .big-btn-mobile {{
-      background:#C9B6E4 !important;
-      color:white !important;
-      font-weight:600 !important;
-      border-radius:12px !important;
-      padding:15px !important;
-      width:100% !important;
-      font-size:18px !important;
-      border:none;
-      cursor:pointer;
-      margin-bottom:15px !important;
-    }}
+    .sms-btn {
+        display: block;
+        width: 100%;
+        padding: 18px;
+        margin: 10px 0;
+        border-radius: 15px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 20px;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+    }
+    .btn-all {
+        background: #A8D5FE;
+        color: #003B73;
+        font-size: 22px;
+        padding: 20px;
+    }
+    .btn-individual {
+        background: #C9B6E4;
+        color: white;
+        font-size: 18px;
+        padding: 15px;
+    }
     </style>
-    </head>
-    <body>
+    """, unsafe_allow_html=True)
     
-    <div id="sendButtons"></div>
-    
+    # 전체 발송 버튼 - iOS/Android 자동 감지
+    st.markdown(f"""
+    <a href="{ios_url}" class="sms-btn btn-all" id="iosBtn">
+        📢 전체에게 문자 보내기 ({len(phones)}명)
+    </a>
+    <a href="{android_url}" class="sms-btn btn-all" id="androidBtn" style="display:none;">
+        📢 전체에게 문자 보내기 ({len(phones)}명)
+    </a>
     <script>
-    function decodeBase64(str) {{
-      return decodeURIComponent(escape(atob(str)));
-    }}
-    
-    // 모바일용 버튼 생성 (원본 HTML과 동일)
-    function createSendButtons(phones, msg) {{
-      const area = document.getElementById("sendButtons");
-      area.innerHTML = "";
-    
-      // 전체 보내기
-      const allBtn = document.createElement("button");
-      allBtn.className = "mobile-all-btn";
-      allBtn.innerHTML = `📢 전체에게 문자 보내기 (${{phones.length}}명)`;
-    
-      allBtn.onclick = () => {{
-        const allNumbers = phones.join(",");
-        const isiPhone = navigator.userAgent.toLowerCase().includes("iphone");
-        let smsURL = "";
-    
-        if (isiPhone)
-            smsURL = `sms:/open?addresses=${{allNumbers}}&body=${{encodeURIComponent(msg)}}`;
-        else
-            smsURL = `sms:${{allNumbers}}?body=${{encodeURIComponent(msg)}}`;
-    
-        // 동적으로 링크 생성 및 클릭
-        const a = document.createElement('a');
-        a.href = smsURL;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        allBtn.style.display = "none";
-      }};
-      area.appendChild(allBtn);
-    
-      // 개별 버튼
-      phones.forEach((p,i)=>{{
-        const btn = document.createElement("button");
-        btn.className = "big-btn-mobile";
-        btn.innerHTML = `📨 [${{i+1}}] ${{p}}`;
-    
-        btn.onclick = () => {{
-          const smsURL = `sms:${{p}}?body=${{encodeURIComponent(msg)}}`;
-          
-          // 동적으로 링크 생성 및 클릭
-          const a = document.createElement('a');
-          a.href = smsURL;
-          a.target = '_blank';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          
-          btn.style.display = "none";
-        }};
-        area.appendChild(btn);
-      }});
-    }}
-    
-    // 페이지 로드 시 실행
-    const phones = decodeURIComponent("{phones_param}").split(",");
-    const decodedMsg = decodeBase64(decodeURIComponent("{msg_param}"));
-    createSendButtons(phones, decodedMsg);
+        if (!navigator.userAgent.toLowerCase().includes("iphone")) {{
+            document.getElementById("iosBtn").style.display = "none";
+            document.getElementById("androidBtn").style.display = "block";
+        }}
     </script>
+    <div style="height: 20px;"></div>
+    """, unsafe_allow_html=True)
     
-    </body>
-    </html>
-    """
-    
-    # HTML 전체를 렌더링
-    components.html(html_code, height=2000, scrolling=True)
+    # 개별 버튼들
+    for idx, phone in enumerate(phones):
+        sms_url = f"sms:{phone}?body={encoded_msg}"
+        st.markdown(f"""
+        <a href="{sms_url}" class="sms-btn btn-individual">
+            📨 [{idx+1}] {phone}
+        </a>
+        """, unsafe_allow_html=True)
 
 # 일반 모드 (QR 생성)
 else:
