@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import qrcode
 from io import BytesIO
 import base64
@@ -91,55 +92,86 @@ if 'p' in query_params and 'm' in query_params:
         all_numbers = ",".join(phones)
         encoded_msg = quote(decoded_msg)
         
-        # JavaScript로 iOS/Android 구분 및 버튼 숨김 처리
-        st.markdown(f"""
-        <div id="allBtn">
-            <button onclick="sendAllSMS()" style="width:100%; background:#A8D5FE; color:#003B73; padding:40px; border:none; border-radius:20px; text-align:center; font-size:28px; font-weight:800; margin:20px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+        # HTML 컴포넌트 생성
+        buttons_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{
+                    margin: 0;
+                    padding: 20px;
+                    font-family: sans-serif;
+                }}
+                .btn {{
+                    width: 100%;
+                    padding: 35px;
+                    border: none;
+                    border-radius: 15px;
+                    font-size: 24px;
+                    font-weight: 700;
+                    margin: 10px 0;
+                    cursor: pointer;
+                    text-decoration: none;
+                    display: block;
+                    text-align: center;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                }}
+                .btn-all {{
+                    background: #A8D5FE;
+                    color: #003B73;
+                    padding: 40px;
+                    font-size: 28px;
+                }}
+                .btn-individual {{
+                    background: #C9B6E4;
+                    color: white;
+                }}
+            </style>
+        </head>
+        <body>
+            <a href="#" onclick="sendAllSMS(); return false;" class="btn btn-all">
                 📢 전체에게 문자 보내기 ({len(phones)}명)
-            </button>
-        </div>
-        
-        <script>
-        function sendAllSMS() {{
-            const allNumbers = decodeURIComponent("{all_numbers}");
-            const msg = decodeURIComponent("{encoded_msg}");
-            const isiPhone = navigator.userAgent.toLowerCase().includes("iphone");
+            </a>
             
-            let smsURL = "";
-            if (isiPhone) {{
-                smsURL = "sms:/open?addresses=" + allNumbers + "&body=" + encodeURIComponent(msg);
-            }} else {{
-                smsURL = "sms:" + allNumbers + "?body=" + encodeURIComponent(msg);
-            }}
+            <div style="height: 20px;"></div>
             
-            window.location.href = smsURL;
-            document.getElementById("allBtn").style.display = "none";
-        }}
-        </script>
-        """, unsafe_allow_html=True)
+        """
         
-        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
-        
-        # 개별 버튼들
+        # 개별 버튼들 추가
         for idx, phone in enumerate(phones):
-            st.markdown(f"""
-            <div id="btn{idx}">
-                <button onclick="sendSMS{idx}()" style="width:100%; background:#C9B6E4; color:white; padding:30px; border:none; border-radius:15px; text-align:center; font-size:24px; font-weight:700; margin:12px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
-                    📨 [{idx+1}] {phone}
-                </button>
-            </div>
-            
+            sms_url = f"sms:{phone}?body={encoded_msg}"
+            buttons_html += f"""
+            <a href="{sms_url}" class="btn btn-individual">
+                📨 [{idx+1}] {phone}
+            </a>
+            """
+        
+        buttons_html += f"""
             <script>
-            function sendSMS{idx}() {{
-                const phone = "{phone}";
-                const msg = decodeURIComponent("{encoded_msg}");
-                const smsURL = "sms:" + phone + "?body=" + encodeURIComponent(msg);
-                
-                window.location.href = smsURL;
-                document.getElementById("btn{idx}").style.display = "none";
-            }}
+                function sendAllSMS() {{
+                    const allNumbers = "{all_numbers}";
+                    const msg = decodeURIComponent("{encoded_msg}");
+                    const isiPhone = /iPhone/i.test(navigator.userAgent);
+                    
+                    let smsURL;
+                    if (isiPhone) {{
+                        smsURL = "sms:/open?addresses=" + allNumbers + "&body=" + encodeURIComponent(msg);
+                    }} else {{
+                        smsURL = "sms:" + allNumbers + "?body=" + encodeURIComponent(msg);
+                    }}
+                    
+                    window.location.href = smsURL;
+                }}
             </script>
-            """, unsafe_allow_html=True)
+        </body>
+        </html>
+        """
+        
+        # HTML 컴포넌트 렌더링
+        components.html(buttons_html, height=600, scrolling=True)
         
     except Exception as e:
         st.error(f"오류가 발생했습니다: {str(e)}")
