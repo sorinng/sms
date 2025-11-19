@@ -8,6 +8,7 @@ from urllib.parse import quote
 # 페이지 설정
 st.set_page_config(
     page_title="📱 문자 보내기 📱",
+    page_icon="📱",
     layout="centered"
 )
 
@@ -118,7 +119,14 @@ if 'p' in query_params and 'm' in query_params:
         else
             smsURL = `sms:${{allNumbers}}?body=${{encodeURIComponent(msg)}}`;
     
-        window.location.href = smsURL;
+        // 동적으로 링크 생성 및 클릭
+        const a = document.createElement('a');
+        a.href = smsURL;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
         allBtn.style.display = "none";
       }};
       area.appendChild(allBtn);
@@ -131,7 +139,15 @@ if 'p' in query_params and 'm' in query_params:
     
         btn.onclick = () => {{
           const smsURL = `sms:${{p}}?body=${{encodeURIComponent(msg)}}`;
-          window.location.href = smsURL;
+          
+          // 동적으로 링크 생성 및 클릭
+          const a = document.createElement('a');
+          a.href = smsURL;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          
           btn.style.display = "none";
         }};
         area.appendChild(btn);
