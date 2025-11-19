@@ -8,7 +8,6 @@ from urllib.parse import quote
 # 페이지 설정
 st.set_page_config(
     page_title="📱 문자 보내기 📱",
-    page_icon="📱",
     layout="centered"
 )
 
