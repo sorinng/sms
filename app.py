@@ -67,26 +67,26 @@ if 'p' in query_params and 'm' in query_params:
       background:#A8D5FE !important;
       color:#003B73 !important;
       font-weight:700 !important;
-      border-radius:20px !important;
-      padding:25px !important;
-      width:100% !important;
-      font-size:24px !important;
-      border:none;
-      cursor:pointer;
-      margin-bottom:30px !important;
-    }}
-    
-    .big-btn-mobile {{
-      background:#C9B6E4 !important;
-      color:white !important;
-      font-weight:700 !important;
       border-radius:15px !important;
-      padding:22px !important;
+      padding:18px !important;
       width:100% !important;
       font-size:20px !important;
       border:none;
       cursor:pointer;
       margin-bottom:20px !important;
+    }}
+    
+    .big-btn-mobile {{
+      background:#C9B6E4 !important;
+      color:white !important;
+      font-weight:600 !important;
+      border-radius:12px !important;
+      padding:15px !important;
+      width:100% !important;
+      font-size:18px !important;
+      border:none;
+      cursor:pointer;
+      margin-bottom:15px !important;
     }}
     </style>
     </head>
@@ -199,6 +199,7 @@ else:
     with col2:
         generate_qr_btn = st.button("QR 코드 생성", type="primary", use_container_width=True)
     
+    # QR 코드 표시 영역 (버튼 바로 아래)
     if generate_qr_btn:
         phones_list = [p.strip() for p in phone_input.split('\n') if p.strip()]
         
@@ -207,23 +208,26 @@ else:
         elif len(phones_list) == 0:
             st.error("❌ 번호를 입력하세요.")
         else:
-            # URL 생성
+            # session_state에 QR 정보 저장
             base64_msg = encode_base64(msg_input)
             p_param = quote(",".join(phones_list))
             m_param = quote(base64_msg)
-            
             final_url = f"https://aisw000111.streamlit.app/?p={p_param}&m={m_param}"
             
-            # QR 코드 생성
-            st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
-            st.markdown('<div style="text-align:center; font-weight:bold; font-size:1.3em; margin-bottom:15px;">🔲 QR 코드로 접속하세요</div>', unsafe_allow_html=True)
-            
-            qr_img = generate_qr(final_url)
-            col1, col2, col3 = st.columns([1, 2, 1])
-            with col2:
-                st.image(qr_img, use_container_width=True)
-            
-            st.success("✅ QR 코드가 생성되었습니다! 모바일에서 QR을 스캔하여 문자를 보내세요.")
+            st.session_state['qr_url'] = final_url
+            st.session_state['qr_generated'] = True
+    
+    # QR 코드 표시
+    if st.session_state.get('qr_generated', False):
+        st.markdown('<div style="height:15px;"></div>', unsafe_allow_html=True)
+        st.markdown('<div style="text-align:center; font-weight:bold; font-size:1.2em; margin-bottom:10px;">🔲 QR 코드</div>', unsafe_allow_html=True)
+        
+        qr_img = generate_qr(st.session_state['qr_url'])
+        col1, col2, col3 = st.columns([1.5, 2, 1.5])
+        with col2:
+            st.image(qr_img, use_container_width=True)
+        
+        st.markdown('<div style="text-align:center; color:#28a745; font-size:14px; margin-top:10px;">✅ 모바일에서 스캔하여 문자를 보내세요</div>', unsafe_allow_html=True)
 
     st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
     st.markdown("""
