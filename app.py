@@ -118,6 +118,7 @@ if 'p' in query_params and 'm' in query_params:
                     display: block;
                     text-align: center;
                     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                    color: inherit;
                 }}
                 .btn-all {{
                     background: #A8D5FE;
@@ -132,9 +133,9 @@ if 'p' in query_params and 'm' in query_params:
             </style>
         </head>
         <body>
-            <a href="#" onclick="sendAllSMS(); return false;" class="btn btn-all">
+            <button onclick="sendAllSMS()" class="btn btn-all">
                 📢 전체에게 문자 보내기 ({len(phones)}명)
-            </a>
+            </button>
             
             <div style="height: 20px;"></div>
             
@@ -142,11 +143,10 @@ if 'p' in query_params and 'm' in query_params:
         
         # 개별 버튼들 추가
         for idx, phone in enumerate(phones):
-            sms_url = f"sms:{phone}?body={encoded_msg}"
             buttons_html += f"""
-            <a href="{sms_url}" class="btn btn-individual">
+            <button onclick="sendSMS{idx}()" class="btn btn-individual">
                 📨 [{idx+1}] {phone}
-            </a>
+            </button>
             """
         
         buttons_html += f"""
@@ -163,15 +163,29 @@ if 'p' in query_params and 'm' in query_params:
                         smsURL = "sms:" + allNumbers + "?body=" + encodeURIComponent(msg);
                     }}
                     
-                    window.location.href = smsURL;
+                    window.top.location.href = smsURL;
                 }}
+        """
+        
+        # 개별 버튼 JavaScript 함수들
+        for idx, phone in enumerate(phones):
+            buttons_html += f"""
+                function sendSMS{idx}() {{
+                    const phone = "{phone}";
+                    const msg = decodeURIComponent("{encoded_msg}");
+                    const smsURL = "sms:" + phone + "?body=" + encodeURIComponent(msg);
+                    window.top.location.href = smsURL;
+                }}
+            """
+        
+        buttons_html += """
             </script>
         </body>
         </html>
         """
         
         # HTML 컴포넌트 렌더링
-        components.html(buttons_html, height=600, scrolling=True)
+        components.html(buttons_html, height=800, scrolling=True)
         
     except Exception as e:
         st.error(f"오류가 발생했습니다: {str(e)}")
