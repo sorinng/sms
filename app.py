@@ -82,43 +82,80 @@ if 'p' in query_params and 'm' in query_params:
         font-size: 18px;
         padding: 15px;
     }
-    .hidden {
-        display: none !important;
-    }
     </style>
     """, unsafe_allow_html=True)
     
-    # 전체 발송 버튼 - iOS/Android 자동 감지
-    st.markdown(f"""
-    <a href="{ios_url}" class="sms-btn btn-all" id="iosBtn" onclick="hideButton(this)">
-        📢 전체에게 문자 보내기 ({len(phones)}명)
-    </a>
-    <a href="{android_url}" class="sms-btn btn-all" id="androidBtn" style="display:none;" onclick="hideButton(this)">
-        📢 전체에게 문자 보내기 ({len(phones)}명)
-    </a>
-    <script>
-        function hideButton(element) {{
-            setTimeout(function() {{
-                element.classList.add('hidden');
-            }}, 100);
-        }}
-        
-        if (!navigator.userAgent.toLowerCase().includes("iphone")) {{
-            document.getElementById("iosBtn").style.display = "none";
-            document.getElementById("androidBtn").style.display = "block";
-        }}
-    </script>
+    # 전체 발송 버튼
+    button_html = f"""
+    <div id="allBtnContainer">
+        <a href="{ios_url}" class="sms-btn btn-all" id="iosBtn" onclick="handleClick('allBtn')">
+            📢 전체에게 문자 보내기 ({len(phones)}명)
+        </a>
+        <a href="{android_url}" class="sms-btn btn-all" id="androidBtn" style="display:none;" onclick="handleClick('allBtn')">
+            📢 전체에게 문자 보내기 ({len(phones)}명)
+        </a>
+    </div>
+    
     <div style="height: 20px;"></div>
-    """, unsafe_allow_html=True)
+    """
     
     # 개별 버튼들
     for idx, phone in enumerate(phones):
         sms_url = f"sms:{phone}?body={encoded_msg}"
-        st.markdown(f"""
-        <a href="{sms_url}" class="sms-btn btn-individual" id="btn{idx}" onclick="hideButton(this)">
-            📨 [{idx+1}] {phone}
-        </a>
-        """, unsafe_allow_html=True)
+        button_html += f"""
+        <div id="btnContainer{idx}">
+            <a href="{sms_url}" class="sms-btn btn-individual" onclick="handleClick('btn{idx}')">
+                📨 [{idx+1}] {phone}
+            </a>
+        </div>
+        """
+    
+    # JavaScript 추가
+    button_html += """
+    <script>
+        // 버튼 클릭 처리
+        function handleClick(btnId) {
+            localStorage.setItem('hidden_' + btnId, 'true');
+            setTimeout(function() {
+                hideButtonById(btnId);
+            }, 100);
+        }
+        
+        // 버튼 숨기기
+        function hideButtonById(btnId) {
+            var container = document.getElementById(btnId + 'Container');
+            if (!container) container = document.getElementById('allBtnContainer');
+            if (container) container.style.display = 'none';
+        }
+        
+        // 페이지 로드 시 숨겨진 버튼 복원
+        window.addEventListener('load', function() {
+            // iOS/Android 버튼 전환
+            if (!navigator.userAgent.toLowerCase().includes("iphone")) {
+                document.getElementById("iosBtn").style.display = "none";
+                document.getElementById("androidBtn").style.display = "block";
+            }
+            
+            // 숨겨진 버튼들 확인
+            if (localStorage.getItem('hidden_allBtn') === 'true') {
+                hideButtonById('allBtn');
+            }
+    """
+    
+    # 각 개별 버튼 체크
+    for idx in range(len(phones)):
+        button_html += f"""
+            if (localStorage.getItem('hidden_btn{idx}') === 'true') {{
+                hideButtonById('btn{idx}');
+            }}
+        """
+    
+    button_html += """
+        });
+    </script>
+    """
+    
+    st.markdown(button_html, unsafe_allow_html=True)
 
 # 일반 모드 (QR 생성)
 else:
