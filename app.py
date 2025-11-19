@@ -92,14 +92,32 @@ if 'p' in query_params and 'm' in query_params:
         # 전체 보내기 버튼
         all_numbers = ",".join(phones)
         encoded_msg = quote(decoded_msg)
-        all_sms_url = f"sms:{all_numbers}?body={encoded_msg}"
         
+        # JavaScript로 iOS/Android 구분 및 버튼 숨김 처리
         st.markdown(f"""
-        <a href="{all_sms_url}" style="text-decoration:none; display:block;">
-            <button style="width:100%; background:#A8D5FE; color:#003B73; padding:35px; border:none; border-radius:20px; text-align:center; font-size:26px; font-weight:800; margin:20px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+        <div id="allBtn">
+            <button onclick="sendAllSMS()" style="width:100%; background:#A8D5FE; color:#003B73; padding:35px; border:none; border-radius:20px; text-align:center; font-size:26px; font-weight:800; margin:20px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
                 📢 전체에게 문자 보내기 ({len(phones)}명)
             </button>
-        </a>
+        </div>
+        
+        <script>
+        function sendAllSMS() {{
+            const allNumbers = "{all_numbers}";
+            const msg = "{encoded_msg}";
+            const isiPhone = navigator.userAgent.toLowerCase().includes("iphone");
+            
+            let smsURL = "";
+            if (isiPhone) {{
+                smsURL = `sms:/open?addresses=${{allNumbers}}&body=${{msg}}`;
+            }} else {{
+                smsURL = `sms:${{allNumbers}}?body=${{msg}}`;
+            }}
+            
+            window.location.href = smsURL;
+            document.getElementById("allBtn").style.display = "none";
+        }}
+        </script>
         """, unsafe_allow_html=True)
         
         st.markdown("---")
@@ -107,13 +125,23 @@ if 'p' in query_params and 'm' in query_params:
         
         # 개별 버튼들
         for idx, phone in enumerate(phones):
-            sms_url = f"sms:{phone}?body={encoded_msg}"
             st.markdown(f"""
-            <a href="{sms_url}" style="text-decoration:none; display:block;">
-                <button style="width:100%; background:#C9B6E4; color:white; padding:25px; border:none; border-radius:15px; text-align:center; font-size:22px; font-weight:700; margin:12px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+            <div id="btn{idx}">
+                <button onclick="sendSMS{idx}()" style="width:100%; background:#C9B6E4; color:white; padding:25px; border:none; border-radius:15px; text-align:center; font-size:22px; font-weight:700; margin:12px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
                     📨 [{idx+1}] {phone}
                 </button>
-            </a>
+            </div>
+            
+            <script>
+            function sendSMS{idx}() {{
+                const phone = "{phone}";
+                const msg = "{encoded_msg}";
+                const smsURL = `sms:${{phone}}?body=${{msg}}`;
+                
+                window.location.href = smsURL;
+                document.getElementById("btn{idx}").style.display = "none";
+            }}
+            </script>
             """, unsafe_allow_html=True)
         
     except Exception as e:
