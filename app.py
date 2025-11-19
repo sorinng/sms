@@ -87,40 +87,33 @@ if 'p' in query_params and 'm' in query_params:
         decoded_msg = decode_base64(msg_param)
         
         st.markdown("### 📨 문자 보내기")
-        st.info(f"**수신자:** {len(phones)}명")
-        st.text_area("**문자 내용:**", decoded_msg, height=150, disabled=True)
-        
-        st.markdown("---")
         
         # 전체 보내기 버튼
-        st.markdown(f"""
-        <div style="background:#A8D5FE; color:#003B73; padding:30px; border-radius:20px; text-align:center; font-size:24px; font-weight:800; margin-bottom:30px;">
-            📢 전체에게 문자 보내기 ({len(phones)}명)
-        </div>
-        """, unsafe_allow_html=True)
-        
         all_numbers = ",".join(phones)
         encoded_msg = quote(decoded_msg)
         all_sms_url = f"sms:{all_numbers}?body={encoded_msg}"
         
-        st.markdown(f'<a href="{all_sms_url}" style="display:none;" id="allSms"></a>', unsafe_allow_html=True)
-        st.info("💡 위 버튼을 눌러 모바일 문자 앱이 열리지 않는 경우, 아래 개별 버튼을 사용해주세요.")
+        st.markdown(f"""
+        <a href="{all_sms_url}" style="text-decoration:none;">
+            <div style="background:#A8D5FE; color:#003B73; padding:40px; border-radius:20px; text-align:center; font-size:28px; font-weight:800; margin:20px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+                📢 전체에게 문자 보내기 ({len(phones)}명)
+            </div>
+        </a>
+        """, unsafe_allow_html=True)
         
         st.markdown("---")
         st.markdown("### 개별 발송")
         
         # 개별 버튼들
         for idx, phone in enumerate(phones):
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"""
-                <div style="background:#C9B6E4; color:white; padding:20px; border-radius:15px; text-align:center; font-size:20px; font-weight:700;">
+            sms_url = f"sms:{phone}?body={encoded_msg}"
+            st.markdown(f"""
+            <a href="{sms_url}" style="text-decoration:none;">
+                <div style="background:#C9B6E4; color:white; padding:30px; border-radius:15px; text-align:center; font-size:24px; font-weight:700; margin:15px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
                     📨 [{idx+1}] {phone}
                 </div>
-                """, unsafe_allow_html=True)
-            with col2:
-                sms_url = f"sms:{phone}?body={encoded_msg}"
-                st.markdown(f'[발송]({sms_url})', unsafe_allow_html=True)
+            </a>
+            """, unsafe_allow_html=True)
         
     except Exception as e:
         st.error(f"오류가 발생했습니다: {str(e)}")
