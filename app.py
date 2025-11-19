@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import qrcode
 from io import BytesIO
 import base64
@@ -92,100 +91,34 @@ if 'p' in query_params and 'm' in query_params:
         all_numbers = ",".join(phones)
         encoded_msg = quote(decoded_msg)
         
-        # HTML 컴포넌트 생성
-        buttons_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                body {{
-                    margin: 0;
-                    padding: 20px;
-                    font-family: sans-serif;
-                }}
-                .btn {{
-                    width: 100%;
-                    padding: 35px;
-                    border: none;
-                    border-radius: 15px;
-                    font-size: 24px;
-                    font-weight: 700;
-                    margin: 10px 0;
-                    cursor: pointer;
-                    text-decoration: none;
-                    display: block;
-                    text-align: center;
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-                    color: inherit;
-                }}
-                .btn-all {{
-                    background: #A8D5FE;
-                    color: #003B73;
-                    padding: 40px;
-                    font-size: 28px;
-                }}
-                .btn-individual {{
-                    background: #C9B6E4;
-                    color: white;
-                }}
-            </style>
-        </head>
-        <body>
-            <button onclick="sendAllSMS()" class="btn btn-all">
-                📢 전체에게 문자 보내기 ({len(phones)}명)
-            </button>
-            
-            <div style="height: 20px;"></div>
-            
-        """
+        # 전체 발송 - iOS와 Android 둘 다 표시
+        st.markdown(f"""
+        <div style="margin: 20px 0;">
+            <a href="sms:/open?addresses={all_numbers}&body={encoded_msg}" style="text-decoration: none; display: block; margin-bottom: 10px;">
+                <div style="width:100%; background:#A8D5FE; color:#003B73; padding:40px; border-radius:20px; text-align:center; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+                    📢 전체에게 문자 보내기 (iOS) ({len(phones)}명)
+                </div>
+            </a>
+            <a href="sms:{all_numbers}?body={encoded_msg}" style="text-decoration: none; display: block;">
+                <div style="width:100%; background:#A8D5FE; color:#003B73; padding:40px; border-radius:20px; text-align:center; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+                    📢 전체에게 문자 보내기 (Android) ({len(phones)}명)
+                </div>
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # 개별 버튼들 추가
+        st.markdown('<div style="height: 30px;"></div>', unsafe_allow_html=True)
+        
+        # 개별 버튼들
         for idx, phone in enumerate(phones):
-            buttons_html += f"""
-            <button onclick="sendSMS{idx}()" class="btn btn-individual">
-                📨 [{idx+1}] {phone}
-            </button>
-            """
-        
-        buttons_html += f"""
-            <script>
-                function sendAllSMS() {{
-                    const allNumbers = "{all_numbers}";
-                    const msg = decodeURIComponent("{encoded_msg}");
-                    const isiPhone = /iPhone/i.test(navigator.userAgent);
-                    
-                    let smsURL;
-                    if (isiPhone) {{
-                        smsURL = "sms:/open?addresses=" + allNumbers + "&body=" + encodeURIComponent(msg);
-                    }} else {{
-                        smsURL = "sms:" + allNumbers + "?body=" + encodeURIComponent(msg);
-                    }}
-                    
-                    window.top.location.href = smsURL;
-                }}
-        """
-        
-        # 개별 버튼 JavaScript 함수들
-        for idx, phone in enumerate(phones):
-            buttons_html += f"""
-                function sendSMS{idx}() {{
-                    const phone = "{phone}";
-                    const msg = decodeURIComponent("{encoded_msg}");
-                    const smsURL = "sms:" + phone + "?body=" + encodeURIComponent(msg);
-                    window.top.location.href = smsURL;
-                }}
-            """
-        
-        buttons_html += """
-            </script>
-        </body>
-        </html>
-        """
-        
-        # HTML 컴포넌트 렌더링
-        components.html(buttons_html, height=800, scrolling=True)
+            sms_url = f"sms:{phone}?body={encoded_msg}"
+            st.markdown(f"""
+            <a href="{sms_url}" style="text-decoration: none; display: block; margin: 10px 0;">
+                <div style="width:100%; background:#C9B6E4; color:white; padding:30px; border-radius:15px; text-align:center; font-size:24px; font-weight:700; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+                    📨 [{idx+1}] {phone}
+                </div>
+            </a>
+            """, unsafe_allow_html=True)
         
     except Exception as e:
         st.error(f"오류가 발생했습니다: {str(e)}")
