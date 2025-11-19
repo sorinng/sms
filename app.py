@@ -87,6 +87,7 @@ if 'p' in query_params and 'm' in query_params:
         decoded_msg = decode_base64(msg_param)
         
         st.markdown("### 📨 문자 보내기")
+        st.info(f"**수신자:** {len(phones)}명 | **내용:** {decoded_msg[:30]}..." if len(decoded_msg) > 30 else f"**수신자:** {len(phones)}명 | **내용:** {decoded_msg}")
         
         # 전체 보내기 버튼
         all_numbers = ",".join(phones)
@@ -94,10 +95,10 @@ if 'p' in query_params and 'm' in query_params:
         all_sms_url = f"sms:{all_numbers}?body={encoded_msg}"
         
         st.markdown(f"""
-        <a href="{all_sms_url}" style="text-decoration:none;">
-            <div style="background:#A8D5FE; color:#003B73; padding:40px; border-radius:20px; text-align:center; font-size:28px; font-weight:800; margin:20px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+        <a href="{all_sms_url}" style="text-decoration:none; display:block;">
+            <button style="width:100%; background:#A8D5FE; color:#003B73; padding:35px; border:none; border-radius:20px; text-align:center; font-size:26px; font-weight:800; margin:20px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
                 📢 전체에게 문자 보내기 ({len(phones)}명)
-            </div>
+            </button>
         </a>
         """, unsafe_allow_html=True)
         
@@ -108,10 +109,10 @@ if 'p' in query_params and 'm' in query_params:
         for idx, phone in enumerate(phones):
             sms_url = f"sms:{phone}?body={encoded_msg}"
             st.markdown(f"""
-            <a href="{sms_url}" style="text-decoration:none;">
-                <div style="background:#C9B6E4; color:white; padding:30px; border-radius:15px; text-align:center; font-size:24px; font-weight:700; margin:15px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+            <a href="{sms_url}" style="text-decoration:none; display:block;">
+                <button style="width:100%; background:#C9B6E4; color:white; padding:25px; border:none; border-radius:15px; text-align:center; font-size:22px; font-weight:700; margin:12px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
                     📨 [{idx+1}] {phone}
-                </div>
+                </button>
             </a>
             """, unsafe_allow_html=True)
         
