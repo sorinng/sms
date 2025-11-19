@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import qrcode
 from io import BytesIO
 import base64
@@ -10,42 +11,6 @@ st.set_page_config(
     page_icon="📱",
     layout="centered"
 )
-
-# CSS 스타일링
-st.markdown("""
-<style>
-    .main {
-        background-color: #f4f4f4;
-    }
-    .stTextArea textarea {
-        font-size: 18px;
-    }
-    .big-title {
-        text-align: center;
-        font-size: 2.5em;
-        font-weight: 800;
-        margin-bottom: 30px;
-    }
-    .count-text {
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.2em;
-        margin-bottom: 10px;
-    }
-    div[data-testid="stButton"] button {
-        width: 100%;
-        background-color: #C9B6E4;
-        color: white;
-        font-size: 20px;
-        font-weight: 700;
-        padding: 15px;
-        border-radius: 14px;
-    }
-    div[data-testid="stButton"] button:hover {
-        background-color: #B39CD0;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # Base64 인코딩/디코딩 함수
 def encode_base64(text):
@@ -74,59 +39,125 @@ def generate_qr(url):
 # URL 파라미터 확인
 query_params = st.query_params
 
-# 제목 (QR 모드가 아닐 때만 표시)
-if 'p' not in query_params or 'm' not in query_params:
-    st.markdown('<div class="big-title">📱 문자 보내기 📱</div>', unsafe_allow_html=True)
-
-# QR 접속 모드 (파라미터가 있을 때)
+# QR 접속 모드 (파라미터가 있을 때) - 원본 HTML과 동일한 구조
 if 'p' in query_params and 'm' in query_params:
-    try:
-        phones_param = query_params['p']
-        msg_param = query_params['m']
-        
-        phones = phones_param.split(',')
-        decoded_msg = decode_base64(msg_param)
-        
-        # 전체 보내기 버튼
-        all_numbers = ",".join(phones)
-        encoded_msg = quote(decoded_msg)
-        
-        # 전체 발송 - iOS와 Android 둘 다 표시
-        st.markdown(f"""
-        <div style="margin: 20px 0;">
-            <a href="sms:/open?addresses={all_numbers}&body={encoded_msg}" style="text-decoration: none; display: block; margin-bottom: 10px;">
-                <div style="width:100%; background:#A8D5FE; color:#003B73; padding:40px; border-radius:20px; text-align:center; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
-                    📢 전체에게 문자 보내기 (iOS) ({len(phones)}명)
-                </div>
-            </a>
-            <a href="sms:{all_numbers}?body={encoded_msg}" style="text-decoration: none; display: block;">
-                <div style="width:100%; background:#A8D5FE; color:#003B73; padding:40px; border-radius:20px; text-align:center; font-size:28px; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
-                    📢 전체에게 문자 보내기 (Android) ({len(phones)}명)
-                </div>
-            </a>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown('<div style="height: 30px;"></div>', unsafe_allow_html=True)
-        
-        # 개별 버튼들
-        for idx, phone in enumerate(phones):
-            sms_url = f"sms:{phone}?body={encoded_msg}"
-            st.markdown(f"""
-            <a href="{sms_url}" style="text-decoration: none; display: block; margin: 10px 0;">
-                <div style="width:100%; background:#C9B6E4; color:white; padding:30px; border-radius:15px; text-align:center; font-size:24px; font-weight:700; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
-                    📨 [{idx+1}] {phone}
-                </div>
-            </a>
-            """, unsafe_allow_html=True)
-        
-    except Exception as e:
-        st.error(f"오류가 발생했습니다: {str(e)}")
+    phones_param = query_params['p']
+    msg_param = query_params['m']
+    
+    phones = phones_param.split(',')
+    decoded_msg = decode_base64(msg_param)
+    
+    # 원본 HTML을 그대로 사용 (JavaScript 포함)
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문자 보내기</title>
+    <style>
+    body {{
+      background:#f4f4f4;
+      font-family:"Malgun Gothic",sans-serif;
+      margin:0;
+      padding:20px;
+    }}
+    
+    .mobile-all-btn {{
+      background:#A8D5FE !important;
+      color:#003B73 !important;
+      font-weight:800 !important;
+      border-radius:30px !important;
+      padding:40px !important;
+      width:100% !important;
+      font-size:40px !important;
+      border:none;
+      cursor:pointer;
+      margin-bottom:60px !important;
+    }}
+    
+    .big-btn-mobile {{
+      background:#C9B6E4 !important;
+      color:white !important;
+      font-weight:800 !important;
+      border-radius:30px !important;
+      padding:40px !important;
+      width:100% !important;
+      font-size:40px !important;
+      border:none;
+      cursor:pointer;
+      margin-bottom:60px !important;
+    }}
+    </style>
+    </head>
+    <body>
+    
+    <div id="sendButtons"></div>
+    
+    <script>
+    function decodeBase64(str) {{
+      return decodeURIComponent(escape(atob(str)));
+    }}
+    
+    // 모바일용 버튼 생성 (원본 HTML과 동일)
+    function createSendButtons(phones, msg) {{
+      const area = document.getElementById("sendButtons");
+      area.innerHTML = "";
+    
+      // 전체 보내기
+      const allBtn = document.createElement("button");
+      allBtn.className = "mobile-all-btn";
+      allBtn.innerHTML = `📢 전체에게 문자 보내기 (${{phones.length}}명)`;
+    
+      allBtn.onclick = () => {{
+        const allNumbers = phones.join(",");
+        const isiPhone = navigator.userAgent.toLowerCase().includes("iphone");
+        let smsURL = "";
+    
+        if (isiPhone)
+            smsURL = `sms:/open?addresses=${{allNumbers}}&body=${{encodeURIComponent(msg)}}`;
+        else
+            smsURL = `sms:${{allNumbers}}?body=${{encodeURIComponent(msg)}}`;
+    
+        window.location.href = smsURL;
+        allBtn.style.display = "none";
+      }};
+      area.appendChild(allBtn);
+    
+      // 개별 버튼
+      phones.forEach((p,i)=>{{
+        const btn = document.createElement("button");
+        btn.className = "big-btn-mobile";
+        btn.innerHTML = `📨 [${{i+1}}] ${{p}}`;
+    
+        btn.onclick = () => {{
+          const smsURL = `sms:${{p}}?body=${{encodeURIComponent(msg)}}`;
+          window.location.href = smsURL;
+          btn.style.display = "none";
+        }};
+        area.appendChild(btn);
+      }});
+    }}
+    
+    // 페이지 로드 시 실행
+    const phones = decodeURIComponent("{phones_param}").split(",");
+    const decodedMsg = decodeBase64(decodeURIComponent("{msg_param}"));
+    createSendButtons(phones, decodedMsg);
+    </script>
+    
+    </body>
+    </html>
+    """
+    
+    # HTML 전체를 렌더링
+    components.html(html_code, height=2000, scrolling=True)
 
 # 일반 모드 (QR 생성)
 else:
+    st.markdown('<h1 style="text-align:center;">📱 문자 보내기 📱</h1>', unsafe_allow_html=True)
+    
     # 전화번호 입력
-    st.markdown('<div class="count-text">핸드폰 번호 (<span id="phoneCount">0</span>개)</div>', unsafe_allow_html=True)
+    st.markdown("### 핸드폰 번호")
     phone_input = st.text_area(
         "",
         placeholder="01012345678\n01098765432",
@@ -135,12 +166,12 @@ else:
         label_visibility="collapsed"
     )
     
-    # 전화번호 개수 계산
     phones = [p.strip() for p in phone_input.split('\n') if p.strip()]
-    st.markdown(f'<div style="text-align:center; color:#666; margin-bottom:20px;">입력된 번호: <strong>{len(phones)}개</strong></div>', unsafe_allow_html=True)
+    if phones:
+        st.info(f"입력된 번호: **{len(phones)}개**")
     
     # 문자 내용 입력
-    st.markdown('<div class="count-text">문자내용</div>', unsafe_allow_html=True)
+    st.markdown("### 문자 내용")
     msg_input = st.text_area(
         "",
         placeholder="여러 줄을 입력해도 됩니다.",
@@ -172,15 +203,11 @@ else:
             with col2:
                 st.image(qr_img, use_container_width=True)
             
-            st.markdown(f"**생성된 URL:**")
-            st.code(final_url, language=None)
-            
             st.success("✅ QR 코드가 생성되었습니다! 모바일에서 QR을 스캔하여 문자를 보내세요.")
 
-# 하단 안내
-st.markdown("---")
-st.markdown("""
-<div style="text-align:center; color:#999; font-size:14px;">
-    💡 PC에서는 QR 코드를 생성하고, 모바일에서 스캔하여 문자를 보낼 수 있습니다.
-</div>
-""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align:center; color:#999; font-size:14px;">
+        💡 PC에서는 QR 코드를 생성하고, 모바일에서 스캔하여 문자를 보낼 수 있습니다.
+    </div>
+    """, unsafe_allow_html=True)
