@@ -67,26 +67,26 @@ if 'p' in query_params and 'm' in query_params:
       background:#A8D5FE !important;
       color:#003B73 !important;
       font-weight:700 !important;
-      border-radius:15px !important;
-      padding:20px !important;
+      border-radius:20px !important;
+      padding:25px !important;
       width:100% !important;
-      font-size:22px !important;
+      font-size:24px !important;
       border:none;
       cursor:pointer;
-      margin-bottom:20px !important;
+      margin-bottom:30px !important;
     }}
     
     .big-btn-mobile {{
       background:#C9B6E4 !important;
       color:white !important;
       font-weight:700 !important;
-      border-radius:12px !important;
-      padding:18px !important;
+      border-radius:15px !important;
+      padding:22px !important;
       width:100% !important;
-      font-size:18px !important;
+      font-size:20px !important;
       border:none;
       cursor:pointer;
-      margin-bottom:15px !important;
+      margin-bottom:20px !important;
     }}
     </style>
     </head>
@@ -165,7 +165,7 @@ if 'p' in query_params and 'm' in query_params:
     """
     
     # HTML 전체를 렌더링
-    components.html(html_code, height=1200, scrolling=True)
+    components.html(html_code, height=2000, scrolling=True)
 
 # 일반 모드 (QR 생성)
 else:
