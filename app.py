@@ -66,27 +66,27 @@ if 'p' in query_params and 'm' in query_params:
     .mobile-all-btn {{
       background:#A8D5FE !important;
       color:#003B73 !important;
-      font-weight:800 !important;
-      border-radius:30px !important;
-      padding:40px !important;
+      font-weight:700 !important;
+      border-radius:15px !important;
+      padding:20px !important;
       width:100% !important;
-      font-size:40px !important;
+      font-size:22px !important;
       border:none;
       cursor:pointer;
-      margin-bottom:60px !important;
+      margin-bottom:20px !important;
     }}
     
     .big-btn-mobile {{
       background:#C9B6E4 !important;
       color:white !important;
-      font-weight:800 !important;
-      border-radius:30px !important;
-      padding:40px !important;
+      font-weight:700 !important;
+      border-radius:12px !important;
+      padding:18px !important;
       width:100% !important;
-      font-size:40px !important;
+      font-size:18px !important;
       border:none;
       cursor:pointer;
-      margin-bottom:60px !important;
+      margin-bottom:15px !important;
     }}
     </style>
     </head>
@@ -165,53 +165,58 @@ if 'p' in query_params and 'm' in query_params:
     """
     
     # HTML 전체를 렌더링
-    components.html(html_code, height=2000, scrolling=True)
+    components.html(html_code, height=1200, scrolling=True)
 
 # 일반 모드 (QR 생성)
 else:
-    st.markdown('<h1 style="text-align:center;">📱 문자 보내기 📱</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 style="text-align:center; font-size:2em; margin-bottom:20px;">📱 문자 보내기 📱</h1>', unsafe_allow_html=True)
     
     # 전화번호 입력
-    st.markdown("### 핸드폰 번호")
+    phones = [p.strip() for p in st.session_state.get('phone_input', '').split('\n') if p.strip()]
+    phone_count_display = f" ({len(phones)}개)" if phones else ""
+    st.markdown(f'<div style="font-weight:bold; font-size:1.1em; margin-bottom:5px;">핸드폰 번호{phone_count_display}</div>', unsafe_allow_html=True)
+    
     phone_input = st.text_area(
         "",
         placeholder="01012345678\n01098765432",
-        height=120,
+        height=100,
         key="phone_input",
         label_visibility="collapsed"
     )
     
-    phones = [p.strip() for p in phone_input.split('\n') if p.strip()]
-    if phones:
-        st.info(f"입력된 번호: **{len(phones)}개**")
-    
     # 문자 내용 입력
-    st.markdown("### 문자 내용")
+    st.markdown('<div style="font-weight:bold; font-size:1.1em; margin-bottom:5px; margin-top:15px;">문자 내용</div>', unsafe_allow_html=True)
     msg_input = st.text_area(
         "",
         placeholder="여러 줄을 입력해도 됩니다.",
-        height=120,
+        height=100,
         key="msg_input",
         label_visibility="collapsed"
     )
     
     # QR 코드 생성 버튼
-    if st.button("QR 코드 생성", type="primary", use_container_width=True):
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        generate_qr_btn = st.button("QR 코드 생성", type="primary", use_container_width=True)
+    
+    if generate_qr_btn:
+        phones_list = [p.strip() for p in phone_input.split('\n') if p.strip()]
+        
         if not msg_input.strip():
             st.error("❌ 문자 내용을 입력하세요.")
-        elif len(phones) == 0:
+        elif len(phones_list) == 0:
             st.error("❌ 번호를 입력하세요.")
         else:
             # URL 생성
             base64_msg = encode_base64(msg_input)
-            p_param = quote(",".join(phones))
+            p_param = quote(",".join(phones_list))
             m_param = quote(base64_msg)
             
             final_url = f"https://aisw000111.streamlit.app/?p={p_param}&m={m_param}"
             
             # QR 코드 생성
-            st.markdown("---")
-            st.markdown("### 🔲 QR 코드로 접속하세요")
+            st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+            st.markdown('<div style="text-align:center; font-weight:bold; font-size:1.3em; margin-bottom:15px;">🔲 QR 코드로 접속하세요</div>', unsafe_allow_html=True)
             
             qr_img = generate_qr(final_url)
             col1, col2, col3 = st.columns([1, 2, 1])
@@ -220,9 +225,9 @@ else:
             
             st.success("✅ QR 코드가 생성되었습니다! 모바일에서 QR을 스캔하여 문자를 보내세요.")
 
-    st.markdown("---")
+    st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
     st.markdown("""
-    <div style="text-align:center; color:#999; font-size:14px;">
+    <div style="text-align:center; color:#999; font-size:13px;">
         💡 PC에서는 QR 코드를 생성하고, 모바일에서 스캔하여 문자를 보낼 수 있습니다.
     </div>
     """, unsafe_allow_html=True)
