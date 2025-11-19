@@ -74,8 +74,9 @@ def generate_qr(url):
 # URL 파라미터 확인
 query_params = st.query_params
 
-# 제목
-st.markdown('<div class="big-title">📱 문자 보내기 📱</div>', unsafe_allow_html=True)
+# 제목 (QR 모드가 아닐 때만 표시)
+if 'p' not in query_params or 'm' not in query_params:
+    st.markdown('<div class="big-title">📱 문자 보내기 📱</div>', unsafe_allow_html=True)
 
 # QR 접속 모드 (파라미터가 있을 때)
 if 'p' in query_params and 'm' in query_params:
@@ -86,9 +87,6 @@ if 'p' in query_params and 'm' in query_params:
         phones = phones_param.split(',')
         decoded_msg = decode_base64(msg_param)
         
-        st.markdown("### 📨 문자 보내기")
-        st.info(f"**수신자:** {len(phones)}명 | **내용:** {decoded_msg[:30]}..." if len(decoded_msg) > 30 else f"**수신자:** {len(phones)}명 | **내용:** {decoded_msg}")
-        
         # 전체 보내기 버튼
         all_numbers = ",".join(phones)
         encoded_msg = quote(decoded_msg)
@@ -96,22 +94,22 @@ if 'p' in query_params and 'm' in query_params:
         # JavaScript로 iOS/Android 구분 및 버튼 숨김 처리
         st.markdown(f"""
         <div id="allBtn">
-            <button onclick="sendAllSMS()" style="width:100%; background:#A8D5FE; color:#003B73; padding:35px; border:none; border-radius:20px; text-align:center; font-size:26px; font-weight:800; margin:20px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+            <button onclick="sendAllSMS()" style="width:100%; background:#A8D5FE; color:#003B73; padding:40px; border:none; border-radius:20px; text-align:center; font-size:28px; font-weight:800; margin:20px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
                 📢 전체에게 문자 보내기 ({len(phones)}명)
             </button>
         </div>
         
         <script>
         function sendAllSMS() {{
-            const allNumbers = "{all_numbers}";
-            const msg = "{encoded_msg}";
+            const allNumbers = decodeURIComponent("{all_numbers}");
+            const msg = decodeURIComponent("{encoded_msg}");
             const isiPhone = navigator.userAgent.toLowerCase().includes("iphone");
             
             let smsURL = "";
             if (isiPhone) {{
-                smsURL = `sms:/open?addresses=${{allNumbers}}&body=${{msg}}`;
+                smsURL = "sms:/open?addresses=" + allNumbers + "&body=" + encodeURIComponent(msg);
             }} else {{
-                smsURL = `sms:${{allNumbers}}?body=${{msg}}`;
+                smsURL = "sms:" + allNumbers + "?body=" + encodeURIComponent(msg);
             }}
             
             window.location.href = smsURL;
@@ -120,14 +118,13 @@ if 'p' in query_params and 'm' in query_params:
         </script>
         """, unsafe_allow_html=True)
         
-        st.markdown("---")
-        st.markdown("### 개별 발송")
+        st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
         
         # 개별 버튼들
         for idx, phone in enumerate(phones):
             st.markdown(f"""
             <div id="btn{idx}">
-                <button onclick="sendSMS{idx}()" style="width:100%; background:#C9B6E4; color:white; padding:25px; border:none; border-radius:15px; text-align:center; font-size:22px; font-weight:700; margin:12px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+                <button onclick="sendSMS{idx}()" style="width:100%; background:#C9B6E4; color:white; padding:30px; border:none; border-radius:15px; text-align:center; font-size:24px; font-weight:700; margin:12px 0; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
                     📨 [{idx+1}] {phone}
                 </button>
             </div>
@@ -135,8 +132,8 @@ if 'p' in query_params and 'm' in query_params:
             <script>
             function sendSMS{idx}() {{
                 const phone = "{phone}";
-                const msg = "{encoded_msg}";
-                const smsURL = `sms:${{phone}}?body=${{msg}}`;
+                const msg = decodeURIComponent("{encoded_msg}");
+                const smsURL = "sms:" + phone + "?body=" + encodeURIComponent(msg);
                 
                 window.location.href = smsURL;
                 document.getElementById("btn{idx}").style.display = "none";
