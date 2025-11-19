@@ -82,18 +82,27 @@ if 'p' in query_params and 'm' in query_params:
         font-size: 18px;
         padding: 15px;
     }
+    .hidden {
+        display: none !important;
+    }
     </style>
     """, unsafe_allow_html=True)
     
     # 전체 발송 버튼 - iOS/Android 자동 감지
     st.markdown(f"""
-    <a href="{ios_url}" class="sms-btn btn-all" id="iosBtn">
+    <a href="{ios_url}" class="sms-btn btn-all" id="iosBtn" onclick="hideButton(this)">
         📢 전체에게 문자 보내기 ({len(phones)}명)
     </a>
-    <a href="{android_url}" class="sms-btn btn-all" id="androidBtn" style="display:none;">
+    <a href="{android_url}" class="sms-btn btn-all" id="androidBtn" style="display:none;" onclick="hideButton(this)">
         📢 전체에게 문자 보내기 ({len(phones)}명)
     </a>
     <script>
+        function hideButton(element) {{
+            setTimeout(function() {{
+                element.classList.add('hidden');
+            }}, 100);
+        }}
+        
         if (!navigator.userAgent.toLowerCase().includes("iphone")) {{
             document.getElementById("iosBtn").style.display = "none";
             document.getElementById("androidBtn").style.display = "block";
@@ -106,7 +115,7 @@ if 'p' in query_params and 'm' in query_params:
     for idx, phone in enumerate(phones):
         sms_url = f"sms:{phone}?body={encoded_msg}"
         st.markdown(f"""
-        <a href="{sms_url}" class="sms-btn btn-individual">
+        <a href="{sms_url}" class="sms-btn btn-individual" id="btn{idx}" onclick="hideButton(this)">
             📨 [{idx+1}] {phone}
         </a>
         """, unsafe_allow_html=True)
