@@ -38,7 +38,7 @@ def generate_qr(url):
 # URL 파라미터 확인
 query_params = st.query_params
 
-# QR 접속 모드 (파라미터가 있을 때) - 원본 HTML과 동일한 구조
+# QR 접속 모드 (파라미터가 있을 때)
 if 'p' in query_params and 'm' in query_params:
     phones_param = query_params['p']
     msg_param = query_params['m']
